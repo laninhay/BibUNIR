@@ -23,24 +23,25 @@ public class LivroDAO implements ILivroDAO{
 
     @SuppressLint("Range")
     private List<ContentValues> pesquisar(String sql, String where[]){
-        List<ContentValues> lista = new ArrayList<ContentValues>();
+        List<ContentValues> lista = new ArrayList<>();
         Cursor cursor = this.leitura.rawQuery(sql,where);
 
         if (cursor.moveToFirst()){
             do{
                 ContentValues cv = new ContentValues();
-                // Recupera os índices das colunas e depois seus valores
                 cv.put("id", cursor.getInt(cursor.getColumnIndex("id")));
                 cv.put("titulo", cursor.getString(cursor.getColumnIndex("titulo")));
                 cv.put("autor", cursor.getString(cursor.getColumnIndex("autor")));
+                cv.put("editora", cursor.getString(cursor.getColumnIndex("editora"))); // Lendo editora
                 cv.put("ano", cursor.getInt(cursor.getColumnIndex("ano")));
                 lista.add(cv);
-            }while (cursor.moveToNext());
+            } while (cursor.moveToNext());
         }
-        cursor.close(); // É importante fechar o cursor após o uso
+        cursor.close();
         return lista;
     }
 
+    // O método pesquisarPorId também precisa ler a editora
     @SuppressLint("Range")
     @Override
     public ContentValues pesquisarPorId(int id) {
@@ -52,6 +53,7 @@ public class LivroDAO implements ILivroDAO{
             cv.put("id", cursor.getInt(cursor.getColumnIndex("id")));
             cv.put("titulo", cursor.getString(cursor.getColumnIndex("titulo")));
             cv.put("autor", cursor.getString(cursor.getColumnIndex("autor")));
+            cv.put("editora", cursor.getString(cursor.getColumnIndex("editora"))); // Lendo editora
             cv.put("ano", cursor.getInt(cursor.getColumnIndex("ano")));
         }
         cursor.close();
@@ -82,21 +84,19 @@ public class LivroDAO implements ILivroDAO{
 
     @Override
     public long inserir(ContentValues cv) {
-        // Retorna o ID do novo registro ou -1 em caso de erro
-        long id = this.escrita.insert("livro", null, cv);
-        return id;
+        return this.escrita.insert("livro", null, cv);
     }
 
-    @Override
-    public void alterarRegistro(int id, String titulo, String autor, int ano) {
+    // Atualizamos a assinatura para incluir editora
+    public void alterarRegistro(int id, String titulo, String autor, String editora, int ano) {
         ContentValues valores = new ContentValues();
         String where = "id=?";
         String[] whereArgs = new String[]{String.valueOf(id)};
         valores.put("titulo", titulo);
         valores.put("autor", autor);
+        valores.put("editora", editora); // Atualizando editora
         valores.put("ano", ano);
         this.escrita.update("livro", valores, where, whereArgs);
-        // Nota: Evite fechar o banco (this.escrita.close()) se for usar o DAO novamente na mesma tela.
     }
 
     @Override

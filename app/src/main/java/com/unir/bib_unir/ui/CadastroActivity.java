@@ -3,6 +3,7 @@ package com.unir.bib_unir.ui;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -20,7 +21,7 @@ import com.unir.bib_unir.database.LivroDAO;
 public class CadastroActivity extends AppCompatActivity {
 
     private Button btnVoltar, btnSalvar;
-    private TextInputEditText edtTitulo, edtAno, edtAutor;
+    private TextInputEditText edtTitulo, edtAno, edtAutor, edtEditora;
     private LivroDAO livroDAO;
 
     @Override
@@ -38,6 +39,7 @@ public class CadastroActivity extends AppCompatActivity {
         btnSalvar = findViewById(R.id.btnSalvarCadastro);
         edtAno = findViewById(R.id.edtAno);
         edtAutor = findViewById(R.id.edtAutor);
+        edtEditora = findViewById(R.id.edtEditora);
         edtTitulo = findViewById(R.id.edtTitulo);
         livroDAO = new LivroDAO(CadastroActivity.this);
 
@@ -49,6 +51,7 @@ public class CadastroActivity extends AppCompatActivity {
             ContentValues cv = livroDAO.pesquisarPorId(id);
             edtTitulo.setText(cv.getAsString("titulo"));
             edtAutor.setText(cv.getAsString("autor"));
+            edtEditora.setText(cv.getAsString("editora"));
             edtAno.setText(String.valueOf(cv.getAsInteger("ano")));
         }
 
@@ -56,27 +59,37 @@ public class CadastroActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String titulo = edtTitulo.getText().toString();
-                int ano = Integer.parseInt(edtAno.getText().toString());
                 String autor = edtAutor.getText().toString();
+                String editora = edtEditora.getText().toString();
+                String anoStr = edtAno.getText().toString();
+
+                // 1. Validação de Campos
+                if (TextUtils.isEmpty(titulo) || TextUtils.isEmpty(autor) ||
+                        TextUtils.isEmpty(editora) || TextUtils.isEmpty(anoStr)) {
+                    Toast.makeText(CadastroActivity.this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                int ano = Integer.parseInt(anoStr);
 
                 if (id != 0){
-                    // Modo Atualização
-                    livroDAO.alterarRegistro(id, titulo, autor, ano);
-                    Toast.makeText(CadastroActivity.this, "Cadastro atualizado!", Toast.LENGTH_SHORT).show();
+                    // Atualizar com editora
+                    livroDAO.alterarRegistro(id, titulo, autor, editora, ano);
+                    Toast.makeText(CadastroActivity.this, "Atualizado!", Toast.LENGTH_SHORT).show();
                 } else {
-                    // Modo Inserção
                     ContentValues cv = new ContentValues();
                     cv.put("titulo", titulo);
                     cv.put("autor", autor);
+                    cv.put("editora", editora);
                     cv.put("ano", ano);
                     long res = livroDAO.inserir(cv);
                     if (res > 0){
-                        Toast.makeText(CadastroActivity.this, "Cadastrado com sucesso!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(CadastroActivity.this, "Sucesso!", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(CadastroActivity.this, "Erro ao cadastrar.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(CadastroActivity.this, "Erro.", Toast.LENGTH_SHORT).show();
                     }
                 }
-                finish(); // Fecha a tela após salvar
+                finish();
             }
         });
 
